@@ -86,23 +86,44 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
         ScrollController(); // Create a ScrollController
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RSS Reader'),
+        title: const Text('Your Feeds'),
+        backgroundColor: Colors.grey.shade50.withOpacity(0.8),
+        elevation: 0,
+        shadowColor: Colors.amber.shade400.withOpacity(0.2),
+        scrolledUnderElevation: 12,
+        surfaceTintColor: Colors.amber.shade200,
+        toolbarHeight: 48,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {},
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Scrollbar(
         controller: _controller, // Use the ScrollController for the Scrollbar
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: padding),
+        child: Container(
+            child: Padding(
+          padding:
+              const EdgeInsets.all(0.0), // Add padding to the MasonryGridView
           child: MasonryGridView.count(
-            controller:
-                _controller, // Use the ScrollController for the MasonryGridView
+            controller: _controller,
             crossAxisCount: columnCount,
-            mainAxisSpacing: 16.0,
-            crossAxisSpacing: 16.0,
+            mainAxisSpacing: 0,
+            crossAxisSpacing: 0,
             itemCount: _allItems.length,
-            itemBuilder: (BuildContext context, int index) =>
-                FeedItemCard(item: _allItems[index]),
+            itemBuilder: (BuildContext context, int index) => Padding(
+              padding:
+                  const EdgeInsets.all(8.0), // Add padding to the child widgets
+              child: FeedItemCard(item: _allItems[index]),
+            ),
           ),
-        ),
+        )),
       ),
     );
   }
