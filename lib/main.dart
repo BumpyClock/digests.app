@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: RSSFeedScreen(),
+      home: const RSSFeedScreen(),
     );
   }
 }
@@ -81,8 +81,8 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   Widget build(BuildContext context) {
     double viewportWidth = MediaQuery.of(context).size.width;
     int columnCount = calculateColumnCount(viewportWidth);
-    double padding = viewportWidth * 0.02; // 2% of viewport width
-    ScrollController _controller =
+    // double padding = viewportWidth * 0.02; // 2% of viewport width
+    ScrollController controller =
         ScrollController(); // Create a ScrollController
     return Scaffold(
       appBar: AppBar(
@@ -106,13 +106,13 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
         ],
       ),
       body: Scrollbar(
-        controller: _controller, // Use the ScrollController for the Scrollbar
-        child: Container(
-            child: Padding(
+        controller: controller, // Use the ScrollController for the Scrollbar
+        child: Padding(
           padding:
               const EdgeInsets.all(0.0), // Add padding to the MasonryGridView
           child: MasonryGridView.count(
-            controller: _controller,
+            addAutomaticKeepAlives: true,
+            controller: controller,
             crossAxisCount: columnCount,
             mainAxisSpacing: 0,
             crossAxisSpacing: 0,
@@ -123,7 +123,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
               child: FeedItemCard(item: _allItems[index]),
             ),
           ),
-        )),
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'feed_data_model.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:intl/intl.dart';
 
 class FeedItemCard extends StatefulWidget {
   final Item item;
@@ -50,71 +51,75 @@ class _FeedItemCardState extends State<FeedItemCard>
         CachedNetworkImageProvider(widget.item.thumbnail),
         maximumColorCount: 5,
       );
-      setState(() {
-        _paletteGenerator = paletteGenerator;
-        // Choose the dominant color or fallback to a default color
-        _dominantColor =
-            paletteGenerator.lightVibrantColor?.color ?? Colors.blueGrey;
-        boxShadowCore = BoxShadow(
-          color: _dominantColor?.withOpacity(0.1) ?? Colors.transparent,
-          spreadRadius: 2,
-          blurRadius: 6,
-          offset: const Offset(0, 0),
-        );
-        boxShadowCast = BoxShadow(
-          color: _dominantColor?.withOpacity(0.08) ?? Colors.transparent,
-          spreadRadius: 8,
-          blurRadius: 12,
-          offset: const Offset(0, 0),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          _paletteGenerator = paletteGenerator;
+          // Choose the dominant color or fallback to a default color
+          _dominantColor =
+              paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
+          boxShadowCore = BoxShadow(
+            color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
+            spreadRadius: 8,
+            blurRadius: 16,
+            offset: const Offset(0, 0),
+          );
+          boxShadowCast = BoxShadow(
+            color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
+            spreadRadius: 16,
+            blurRadius: 24,
+            offset: const Offset(0, 0),
+          );
+        });
+      }
     } catch (e) {
-      print('Error generating palette: $e');
-      setState(() {
-        _dominantColor = Colors.blueGrey;
-        boxShadowCore = BoxShadow(
-          color: _dominantColor?.withOpacity(0.1) ?? Colors.transparent,
-          spreadRadius: 2,
-          blurRadius: 6,
-          offset: const Offset(0, 0),
-        );
-        boxShadowCast = BoxShadow(
-          color: _dominantColor?.withOpacity(0.08) ?? Colors.transparent,
-          spreadRadius: 8,
-          blurRadius: 12,
-          offset: const Offset(0, 0),
-        );
-      });
+      debugPrint('Error generating palette: $e');
+      if (mounted) {
+        setState(() {
+          _dominantColor = Colors.blueGrey;
+          boxShadowCore = BoxShadow(
+            color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
+            spreadRadius: 8,
+            blurRadius: 16,
+            offset: const Offset(0, 0),
+          );
+          boxShadowCast = BoxShadow(
+            color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
+            spreadRadius: 16,
+            blurRadius: 24,
+            offset: const Offset(0, 0),
+          );
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     BoxShadow coreShadow_rest = BoxShadow(
-      color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
-      spreadRadius: 2,
-      blurRadius: 6,
+      color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
+      spreadRadius: 8,
+      blurRadius: 16,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castShadow_rest = BoxShadow(
-      color: _dominantColor?.withOpacity(0.08) ?? Colors.transparent,
-      spreadRadius: 8,
-      blurRadius: 12,
+      color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
+      spreadRadius: 16,
+      blurRadius: 24,
       offset: const Offset(0, 0),
     );
 
     BoxShadow coreShadow_hover = BoxShadow(
-      color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
-      spreadRadius: 2,
-      blurRadius: 6,
+      color: _dominantColor?.withOpacity(0.4) ?? Colors.transparent,
+      spreadRadius: 8,
+      blurRadius: 16,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castShadow_hover = BoxShadow(
-      color: _dominantColor?.withOpacity(0.12) ?? Colors.transparent,
-      spreadRadius: 8,
-      blurRadius: 12,
+      color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
+      spreadRadius: 16,
+      blurRadius: 24,
       offset: const Offset(0, 0),
     );
 
@@ -130,117 +135,120 @@ class _FeedItemCardState extends State<FeedItemCard>
     }
 
     return MouseRegion(
-      onEnter: (PointerEnterEvent event) => setState(() => {
-            boxShadowCore = coreShadow_hover,
-            boxShadowCast = castShadow_hover,
-          }),
-      onExit: (PointerExitEvent event) => setState(() => {
-            boxShadowCore = coreShadow_rest,
-            boxShadowCast = castShadow_rest,
-          }),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOutCubic,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(23),
-          boxShadow: _dominantColor != null
-              ? [
-                  boxShadowCore,
-                  boxShadowCast,
-                ]
-              : [],
-        ),
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          elevation: elevation,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(23),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              CachedNetworkImage(
-                imageUrl: imageUrl,
-                width: double.maxFinite,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 200,
-                  color: Colors.grey,
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: Colors.red.shade50,
-                ),
+        onEnter: (PointerEnterEvent event) => setState(() => {
+              boxShadowCore = coreShadow_hover,
+              boxShadowCast = castShadow_hover,
+            }),
+        onExit: (PointerExitEvent event) => setState(() => {
+              boxShadowCore = coreShadow_rest,
+              boxShadowCast = castShadow_rest,
+            }),
+        child: RepaintBoundary(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(23),
+              boxShadow: _dominantColor != null
+                  ? [
+                      boxShadowCore,
+                      boxShadowCast,
+                    ]
+                  : [],
+            ),
+            child: Card(
+              clipBehavior: Clip.antiAlias,
+              elevation: elevation,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(23),
               ),
-              Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: CachedNetworkImageProvider(imageUrl),
-                          opacity: .5,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                          child: Container(
-                            alignment: Alignment.center,
-                            color: Colors.white.withOpacity(0.35),
-                          ),
-                        ),
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: double.maxFinite,
+                    fit: BoxFit.cover,
+                    // placeholder: (context, url) =>
+                    //     const CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Container(
+                      height: 200,
+                      color: Colors.red.shade50,
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Stack(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                        child: Text(
-                          widget.item.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.w700,
-                            height: 1.33,
-                            color: Colors.black,
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: CachedNetworkImageProvider(imageUrl),
+                              opacity: .5,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                              child: Container(
+                                alignment: Alignment.center,
+                                color: Colors.white.withOpacity(0.35),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                        child: Text(
-                          widget.item.author,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                        child: Text(
-                          widget.item.created,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ),
-                      ButtonBar(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextButton(
-                            child: const Text('Read more'),
-                            onPressed: () {
-                              // Implement your read more action
-                            },
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                            child: Text(
+                              widget.item.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w700,
+                                height: 1.33,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                            child: Text(
+                              widget.item.author,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                            child: Text(
+                              DateFormat('H:mm a d/M/y').format(
+                                DateTime.parse(widget.item.created).toLocal(),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                          ButtonBar(
+                            children: [
+                              TextButton(
+                                child: const Text('Read more'),
+                                onPressed: () {
+                                  // Implement your read more action
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -248,10 +256,8 @@ class _FeedItemCardState extends State<FeedItemCard>
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }
