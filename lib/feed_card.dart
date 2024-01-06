@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,6 +9,9 @@ import 'package:intl/intl.dart';
 import 'package:html/parser.dart' as htmlparser;
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+
 
 
 class FeedItemCard extends StatefulWidget {
@@ -53,6 +57,39 @@ class _FeedItemCardState extends State<FeedItemCard>
     super.initState();
     _updatePaletteGenerator();
   }
+
+Future<String> fetchContent(String url) async {
+  final response = await http.post(
+    Uri.parse('http://code-server:3000/getreaderview'),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({"urls": [url]}),
+  );
+  // debugPrint(response.body);
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return data[0]["content"] ?? "No content available";
+  } else {
+    throw Exception('Failed to load content');
+  }
+}
+
+  void showContentScreen(String content) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: Text(widget.item.title),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(96),
+            child: HtmlWidget(content),
+          ),
+        ),
+      ),
+    );
+  }
+
 
  Future<void> _updatePaletteGenerator() async {
   if (kIsWeb) {
@@ -288,16 +325,27 @@ class _FeedItemCardState extends State<FeedItemCard>
   children: [
     TextButton(
       child: Text(buttonText),
+      // onPressed: () async {
+      //   final url = widget.item.link;
+      //   if (await canLaunchUrl(Uri.parse(url))) {
+      //     await launchUrl(
+      //       Uri.parse(url),
+      //       webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
+      //     );
+      //   } else {
+      //     throw 'Could not launch $url';
+      //   }
+      // },
       onPressed: () async {
-        final url = widget.item.link;
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(
-            Uri.parse(url),
-            webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
-          );
-        } else {
-          throw 'Could not launch $url';
-        }
+         try {
+      final content = await fetchContent(widget.item.link);
+      debugPrint(widget.item.link);
+      debugPrint(content);
+      showContentScreen(content);
+    } catch (e) {
+      // Handle error or show a message
+      print('Error fetching content: $e');
+    }
       },
     ),
   ],

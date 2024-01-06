@@ -41,7 +41,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   }
 
   _fetchRSSData() async {
-    var url = Uri.parse('https://rss.bumpyclock.com/parse');
+    var url = Uri.parse('http://code-server:3000/parse');
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
         body: json.encode({
