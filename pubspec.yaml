@@ -48,6 +48,8 @@ dependencies:
   html: ^0.15.4
   fluent_ui:
         git: https://github.com/bdlukaa/fluent_ui.git
+  flutter_acrylic: ^1.1.3
+  window_manager: ^0.3.7
 
 
 dev_dependencies:
