@@ -7,7 +7,7 @@ import 'package:palette_generator/palette_generator.dart';
 import 'package:intl/intl.dart';
 import 'package:html/parser.dart' as htmlparser;
 import 'package:flutter/foundation.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 
 class FeedItemCard extends StatefulWidget {
@@ -24,9 +24,9 @@ class _FeedItemCardState extends State<FeedItemCard>
   @override
   bool get wantKeepAlive => true;
   double elevation = 2;
+  String buttonText = 'Read in browser';
 
   Color? _dominantColor;
-  PaletteGenerator? _paletteGenerator;
   final double coreshadowOpacity = .1;
   final double castshadowOpacity = .08;
   final double coreshadowBlur = 3;
@@ -57,6 +57,7 @@ class _FeedItemCardState extends State<FeedItemCard>
  Future<void> _updatePaletteGenerator() async {
   if (kIsWeb) {
     setState(() {
+      buttonText = 'Open in new tab';
       _dominantColor = Colors.blueGrey;
       boxShadowCore = BoxShadow(
         color: _dominantColor!.withOpacity(coreshadowOpacity),
@@ -84,8 +85,7 @@ class _FeedItemCardState extends State<FeedItemCard>
     );
     if (mounted) {
       setState(() {
-        _paletteGenerator = paletteGenerator;
-        // Choose the dominant color or fallback to a default color
+                // Choose the dominant color or fallback to a default color
         _dominantColor =
             paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
         boxShadowCore = BoxShadow(
@@ -125,28 +125,28 @@ class _FeedItemCardState extends State<FeedItemCard>
 }
   @override
   Widget build(BuildContext context) {
-    BoxShadow coreShadow_rest = BoxShadow(
+    BoxShadow coreshadowRest = BoxShadow(
       color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
       spreadRadius: coreshadowSpread,
       blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
-    BoxShadow castShadow_rest = BoxShadow(
+    BoxShadow castshadowRest = BoxShadow(
       color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
       spreadRadius: castshadowSpread,
       blurRadius: castshadowBlur,
       offset: const Offset(0, 0),
     );
 
-    BoxShadow coreShadow_hover = BoxShadow(
+    BoxShadow coreshadowHover = BoxShadow(
       color: _dominantColor?.withOpacity(coreshadowOpacity+.1) ?? Colors.transparent,
       spreadRadius: coreshadowSpread,
       blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
-    BoxShadow castShadow_hover = BoxShadow(
+    BoxShadow castshadowHover = BoxShadow(
       color: _dominantColor?.withOpacity(castshadowOpacity+.1) ?? Colors.transparent,
       spreadRadius: castshadowSpread,
       blurRadius: castshadowBlur,
@@ -166,12 +166,12 @@ class _FeedItemCardState extends State<FeedItemCard>
 
     return MouseRegion(
         onEnter: (PointerEnterEvent event) => setState(() => {
-              boxShadowCore = coreShadow_hover,
-              boxShadowCast = castShadow_hover,
+              boxShadowCore = coreshadowHover,
+              boxShadowCast = castshadowHover,
             }),
         onExit: (PointerExitEvent event) => setState(() => {
-              boxShadowCore = coreShadow_rest,
-              boxShadowCast = castShadow_rest,
+              boxShadowCore = coreshadowRest,
+              boxShadowCast = castshadowRest,
             }),
         child: RepaintBoundary(
           child: AnimatedContainer(
@@ -284,16 +284,24 @@ class _FeedItemCardState extends State<FeedItemCard>
     overflow: TextOverflow.ellipsis,
   ),
 ),
-                          ButtonBar(
-                            children: [
-                              TextButton(
-                                child: const Text('Read more'),
-                                onPressed: () {
-                                  // Implement your read more action
-                                },
-                              ),
-                            ],
-                          ),
+                         ButtonBar(
+  children: [
+    TextButton(
+      child: Text(buttonText),
+      onPressed: () async {
+        final url = widget.item.link;
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(
+            Uri.parse(url),
+            webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
+          );
+        } else {
+          throw 'Could not launch $url';
+        }
+      },
+    ),
+  ],
+),
                         ],
                       ),
                     ],
@@ -305,3 +313,6 @@ class _FeedItemCardState extends State<FeedItemCard>
         ));
   }
 }
+
+
+

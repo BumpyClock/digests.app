@@ -42,8 +42,13 @@ dependencies:
   cached_network_image: ^3.3.1
   palette_generator: ^0.3.3+3
   flutter_image_compress: ^2.1.0
-  intl: ^0.19.0
+  intl: ^0.18.1
   flutter_html: ^2.2.1
+  url_launcher: ^6.2.2
+  html: ^0.15.4
+  fluent_ui:
+        git: https://github.com/bdlukaa/fluent_ui.git
+
 
 dev_dependencies:
   flutter_test:
