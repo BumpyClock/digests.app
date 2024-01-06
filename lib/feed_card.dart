@@ -6,6 +6,8 @@ import 'feed_data_model.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:intl/intl.dart';
 import 'package:html/parser.dart' as htmlparser;
+import 'package:flutter/foundation.dart';
+
 
 
 class FeedItemCard extends StatefulWidget {
@@ -52,55 +54,75 @@ class _FeedItemCardState extends State<FeedItemCard>
     _updatePaletteGenerator();
   }
 
-  Future<void> _updatePaletteGenerator() async {
-    try {
-      final PaletteGenerator paletteGenerator =
-          await PaletteGenerator.fromImageProvider(
-        CachedNetworkImageProvider(widget.item.thumbnail),
-        maximumColorCount: 5,
+ Future<void> _updatePaletteGenerator() async {
+  if (kIsWeb) {
+    setState(() {
+      _dominantColor = Colors.blueGrey;
+      boxShadowCore = BoxShadow(
+        color: _dominantColor!.withOpacity(coreshadowOpacity),
+        spreadRadius: coreshadowSpread,
+        blurRadius: coreshadowBlur,
+        offset: const Offset(0, 0),
       );
-      if (mounted) {
-        setState(() {
-          _paletteGenerator = paletteGenerator;
-          // Choose the dominant color or fallback to a default color
-          _dominantColor =
-              paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
-          boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
-            spreadRadius: coreshadowSpread,
-            blurRadius: coreshadowBlur,
-            offset: const Offset(0, 0),
-          );
-          boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
-            spreadRadius: castshadowSpread,
-            blurRadius: castshadowBlur,
-            offset: const Offset(0, 0),
-          );
-        });
-      }
-    } catch (e) {
-      debugPrint('Error generating palette: $e');
-      if (mounted) {
-        setState(() {
-          _dominantColor = Colors.blueGrey;
-          boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
-            spreadRadius: coreshadowSpread,
-            blurRadius: coreshadowBlur,
-            offset: const Offset(0, 0),
-          );
-          boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
-            spreadRadius: castshadowSpread,
-            blurRadius: castshadowBlur,
-            offset: const Offset(0, 0),
-          );
-        });
-      }
+      boxShadowCast = BoxShadow(
+        color: _dominantColor!.withOpacity(castshadowOpacity),
+        spreadRadius: castshadowSpread,
+        blurRadius: castshadowBlur,
+        offset: const Offset(0, 0),
+      );
+    });
+    return;
+  }
+    // If running in a web environment, skip palette generation
+  
+
+  try {
+    final PaletteGenerator paletteGenerator =
+        await PaletteGenerator.fromImageProvider(
+      CachedNetworkImageProvider(widget.item.thumbnail),
+      maximumColorCount: 5,
+    );
+    if (mounted) {
+      setState(() {
+        _paletteGenerator = paletteGenerator;
+        // Choose the dominant color or fallback to a default color
+        _dominantColor =
+            paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
+        boxShadowCore = BoxShadow(
+          color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+          spreadRadius: coreshadowSpread,
+          blurRadius: coreshadowBlur,
+          offset: const Offset(0, 0),
+        );
+        boxShadowCast = BoxShadow(
+          color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+          spreadRadius: castshadowSpread,
+          blurRadius: castshadowBlur,
+          offset: const Offset(0, 0),
+        );
+      });
+    }
+  } catch (e) {
+    debugPrint('Error generating palette: $e');
+    if (mounted) {
+      setState(() {
+        _dominantColor = Colors.blueGrey;
+        boxShadowCore = BoxShadow(
+          color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+          spreadRadius: coreshadowSpread,
+          blurRadius: coreshadowBlur,
+          offset: const Offset(0, 0),
+        );
+        boxShadowCast = BoxShadow(
+          color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+          spreadRadius: castshadowSpread,
+          blurRadius: castshadowBlur,
+          offset: const Offset(0, 0),
+        );
+      });
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     BoxShadow coreShadow_rest = BoxShadow(
