@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'feed_data_model.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:intl/intl.dart';
+import 'package:html/parser.dart' as htmlparser;
+
 
 class FeedItemCard extends StatefulWidget {
   final Item item;
@@ -23,16 +25,22 @@ class _FeedItemCardState extends State<FeedItemCard>
 
   Color? _dominantColor;
   PaletteGenerator? _paletteGenerator;
+  final double coreshadowOpacity = .1;
+  final double castshadowOpacity = .08;
+  final double coreshadowBlur = 3;
+  final double castshadowBlur = 12;
+  final double coreshadowSpread = 1;
+  final double castshadowSpread = 8;
 
   late BoxShadow boxShadowCore = BoxShadow(
-    color: Colors.grey.withOpacity(0.2),
+    color: Colors.grey.withOpacity(coreshadowOpacity),
     spreadRadius: 2,
     blurRadius: 6,
     offset: const Offset(0, 0),
   );
 
   late BoxShadow boxShadowCast = BoxShadow(
-    color: Colors.grey.withOpacity(0.08),
+    color: Colors.grey.withOpacity(castshadowOpacity),
     spreadRadius: 6,
     blurRadius: 12,
     offset: const Offset(0, 0),
@@ -58,15 +66,15 @@ class _FeedItemCardState extends State<FeedItemCard>
           _dominantColor =
               paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
           boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
-            spreadRadius: 8,
-            blurRadius: 16,
+            color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+            spreadRadius: coreshadowSpread,
+            blurRadius: coreshadowBlur,
             offset: const Offset(0, 0),
           );
           boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
-            spreadRadius: 16,
-            blurRadius: 24,
+            color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+            spreadRadius: castshadowSpread,
+            blurRadius: castshadowBlur,
             offset: const Offset(0, 0),
           );
         });
@@ -77,15 +85,15 @@ class _FeedItemCardState extends State<FeedItemCard>
         setState(() {
           _dominantColor = Colors.blueGrey;
           boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
-            spreadRadius: 8,
-            blurRadius: 16,
+            color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+            spreadRadius: coreshadowSpread,
+            blurRadius: coreshadowBlur,
             offset: const Offset(0, 0),
           );
           boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
-            spreadRadius: 16,
-            blurRadius: 24,
+            color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+            spreadRadius: castshadowSpread,
+            blurRadius: castshadowBlur,
             offset: const Offset(0, 0),
           );
         });
@@ -96,30 +104,30 @@ class _FeedItemCardState extends State<FeedItemCard>
   @override
   Widget build(BuildContext context) {
     BoxShadow coreShadow_rest = BoxShadow(
-      color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
-      spreadRadius: 8,
-      blurRadius: 16,
+      color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+      spreadRadius: coreshadowSpread,
+      blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castShadow_rest = BoxShadow(
-      color: _dominantColor?.withOpacity(0.2) ?? Colors.transparent,
-      spreadRadius: 16,
-      blurRadius: 24,
+      color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+      spreadRadius: castshadowSpread,
+      blurRadius: castshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow coreShadow_hover = BoxShadow(
-      color: _dominantColor?.withOpacity(0.4) ?? Colors.transparent,
-      spreadRadius: 8,
-      blurRadius: 16,
+      color: _dominantColor?.withOpacity(coreshadowOpacity+.1) ?? Colors.transparent,
+      spreadRadius: coreshadowSpread,
+      blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castShadow_hover = BoxShadow(
-      color: _dominantColor?.withOpacity(0.3) ?? Colors.transparent,
-      spreadRadius: 16,
-      blurRadius: 24,
+      color: _dominantColor?.withOpacity(castshadowOpacity+.1) ?? Colors.transparent,
+      spreadRadius: castshadowSpread,
+      blurRadius: castshadowBlur,
       offset: const Offset(0, 0),
     );
 
@@ -240,6 +248,20 @@ class _FeedItemCardState extends State<FeedItemCard>
                               ),
                             ),
                           ),
+                          Padding(
+  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+  child: Text(
+    htmlparser.parse(widget.item.content).querySelector('p')?.text ?? '',
+    style: const TextStyle(
+      fontSize: 14.0,
+      fontFamily: 'Lato',
+      fontWeight: FontWeight.w400,
+      color: Colors.black54,
+    ),
+     maxLines: 3,
+    overflow: TextOverflow.ellipsis,
+  ),
+),
                           ButtonBar(
                             children: [
                               TextButton(
