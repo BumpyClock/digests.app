@@ -49,6 +49,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
             "https://www.theverge.com/rss/index.xml",
             "https://www.polygon.com/rss/index.xml",
             "https://www.vox.com/rss/index.xml",
+            "https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml",
           ]
         }));
 

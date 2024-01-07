@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 void showContentScreen(BuildContext context, String title, String thumbnail,
     String content, String link) {
-  String imgTag = thumbnail != null ? '<img src="$thumbnail" ></img>' : '';
+  String imgTag = '<img src="$thumbnail" ></img>';
   String titleTag = '<h1>$title</h1>';
   String dividerTag = '<hr></hr>';
   content = titleTag + dividerTag + imgTag + content;
@@ -41,20 +41,6 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
               constraints: const BoxConstraints(maxWidth: 800),
               child: Column(
                 children: [
-                  // Text(
-                  //   title,
-                  //   style: const TextStyle(
-                  //     fontSize: 24,
-                  //     fontWeight: FontWeight.w700,
-                  //   ),
-                  //   textAlign: TextAlign.center,
-                  //   maxLines: 4,
-                  //   overflow: TextOverflow.ellipsis,
-                  // ),
-                  // const Divider(
-                  //   color: Colors.grey,
-                  //   thickness: 1,
-                  // ),
                   const SizedBox(height: 24),
                   Expanded(
                     child: SingleChildScrollView(
