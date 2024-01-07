@@ -74,3 +74,11 @@ windows/flutter/generated_plugin_registrant.h
 windows/flutter/generated_plugins.cmake
 pubspec.yaml
 pubspec.lock
+pubspec.lock
+pubspec.yaml
+lib/feed_card.dart
+lib/main.dart
+macos/Podfile.lock
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Runner/DebugProfile.entitlements
+macos/Runner.xcodeproj/project.pbxproj

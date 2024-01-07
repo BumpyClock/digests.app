@@ -8,11 +8,8 @@ import 'package:palette_generator/palette_generator.dart';
 import 'package:intl/intl.dart';
 import 'package:html/parser.dart' as htmlparser;
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-
-
+import 'reader_view.dart';
 
 class FeedItemCard extends StatefulWidget {
   final Item item;
@@ -58,133 +55,126 @@ class _FeedItemCardState extends State<FeedItemCard>
     _updatePaletteGenerator();
   }
 
-Future<String> fetchContent(String url) async {
-  final response = await http.post(
-    Uri.parse('http://code-server:3000/getreaderview'),
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({"urls": [url]}),
-  );
-  // debugPrint(response.body);
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    return data[0]["content"] ?? "No content available";
-  } else {
-    throw Exception('Failed to load content');
-  }
-}
-
-  void showContentScreen(String content) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(widget.item.title),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(96),
-            child: HtmlWidget(content),
-          ),
-        ),
-      ),
+  Future<String> fetchContent(String url) async {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.51:3000/getreaderview'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "urls": [url]
+      }),
     );
-  }
+    // debugPrint(response.body);
 
-
- Future<void> _updatePaletteGenerator() async {
-  if (kIsWeb) {
-    setState(() {
-      buttonText = 'Open in new tab';
-      _dominantColor = Colors.blueGrey;
-      boxShadowCore = BoxShadow(
-        color: _dominantColor!.withOpacity(coreshadowOpacity),
-        spreadRadius: coreshadowSpread,
-        blurRadius: coreshadowBlur,
-        offset: const Offset(0, 0),
-      );
-      boxShadowCast = BoxShadow(
-        color: _dominantColor!.withOpacity(castshadowOpacity),
-        spreadRadius: castshadowSpread,
-        blurRadius: castshadowBlur,
-        offset: const Offset(0, 0),
-      );
-    });
-    return;
-  }
-    // If running in a web environment, skip palette generation
-  
-
-  try {
-    final PaletteGenerator paletteGenerator =
-        await PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(widget.item.thumbnail),
-      maximumColorCount: 5,
-    );
-    if (mounted) {
-      setState(() {
-                // Choose the dominant color or fallback to a default color
-        _dominantColor =
-            paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
-        boxShadowCore = BoxShadow(
-          color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
-          spreadRadius: coreshadowSpread,
-          blurRadius: coreshadowBlur,
-          offset: const Offset(0, 0),
-        );
-        boxShadowCast = BoxShadow(
-          color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
-          spreadRadius: castshadowSpread,
-          blurRadius: castshadowBlur,
-          offset: const Offset(0, 0),
-        );
-      });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data[0]["content"] ?? "No content available";
+    } else {
+      throw Exception('Failed to load content');
     }
-  } catch (e) {
-    debugPrint('Error generating palette: $e');
-    if (mounted) {
+  }
+
+  Future<void> _updatePaletteGenerator() async {
+    if (kIsWeb) {
       setState(() {
+        buttonText = 'Open in new tab';
         _dominantColor = Colors.blueGrey;
         boxShadowCore = BoxShadow(
-          color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+          color: _dominantColor!.withOpacity(coreshadowOpacity),
           spreadRadius: coreshadowSpread,
           blurRadius: coreshadowBlur,
           offset: const Offset(0, 0),
         );
         boxShadowCast = BoxShadow(
-          color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+          color: _dominantColor!.withOpacity(castshadowOpacity),
           spreadRadius: castshadowSpread,
           blurRadius: castshadowBlur,
           offset: const Offset(0, 0),
         );
       });
+      return;
+    }
+    // If running in a web environment, skip palette generation
+
+    try {
+      final PaletteGenerator paletteGenerator =
+          await PaletteGenerator.fromImageProvider(
+        CachedNetworkImageProvider(widget.item.thumbnail),
+        maximumColorCount: 5,
+      );
+      if (mounted) {
+        setState(() {
+          // Choose the dominant color or fallback to a default color
+          _dominantColor =
+              paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
+          boxShadowCore = BoxShadow(
+            color: _dominantColor?.withOpacity(coreshadowOpacity) ??
+                Colors.transparent,
+            spreadRadius: coreshadowSpread,
+            blurRadius: coreshadowBlur,
+            offset: const Offset(0, 0),
+          );
+          boxShadowCast = BoxShadow(
+            color: _dominantColor?.withOpacity(castshadowOpacity) ??
+                Colors.transparent,
+            spreadRadius: castshadowSpread,
+            blurRadius: castshadowBlur,
+            offset: const Offset(0, 0),
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint('Error generating palette: $e');
+      if (mounted) {
+        setState(() {
+          _dominantColor = Colors.blueGrey;
+          boxShadowCore = BoxShadow(
+            color: _dominantColor?.withOpacity(coreshadowOpacity) ??
+                Colors.transparent,
+            spreadRadius: coreshadowSpread,
+            blurRadius: coreshadowBlur,
+            offset: const Offset(0, 0),
+          );
+          boxShadowCast = BoxShadow(
+            color: _dominantColor?.withOpacity(castshadowOpacity) ??
+                Colors.transparent,
+            spreadRadius: castshadowSpread,
+            blurRadius: castshadowBlur,
+            offset: const Offset(0, 0),
+          );
+        });
+      }
     }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     BoxShadow coreshadowRest = BoxShadow(
-      color: _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
+      color:
+          _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
       spreadRadius: coreshadowSpread,
       blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castshadowRest = BoxShadow(
-      color: _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
+      color:
+          _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
       spreadRadius: castshadowSpread,
       blurRadius: castshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow coreshadowHover = BoxShadow(
-      color: _dominantColor?.withOpacity(coreshadowOpacity+.1) ?? Colors.transparent,
+      color: _dominantColor?.withOpacity(coreshadowOpacity + .1) ??
+          Colors.transparent,
       spreadRadius: coreshadowSpread,
       blurRadius: coreshadowBlur,
       offset: const Offset(0, 0),
     );
 
     BoxShadow castshadowHover = BoxShadow(
-      color: _dominantColor?.withOpacity(castshadowOpacity+.1) ?? Colors.transparent,
+      color: _dominantColor?.withOpacity(castshadowOpacity + .1) ??
+          Colors.transparent,
       spreadRadius: castshadowSpread,
       blurRadius: castshadowBlur,
       offset: const Offset(0, 0),
@@ -256,7 +246,7 @@ Future<String> fetchContent(String url) async {
                           ),
                           child: ClipRRect(
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                               child: Container(
                                 alignment: Alignment.center,
                                 color: Colors.white.withOpacity(0.35),
@@ -308,48 +298,58 @@ Future<String> fetchContent(String url) async {
                             ),
                           ),
                           Padding(
-  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-  child: Text(
-    htmlparser.parse(widget.item.content).querySelector('p')?.text ?? '',
-    style: const TextStyle(
-      fontSize: 14.0,
-      fontFamily: 'Lato',
-      fontWeight: FontWeight.w400,
-      color: Colors.black54,
-    ),
-     maxLines: 3,
-    overflow: TextOverflow.ellipsis,
-  ),
-),
-                         ButtonBar(
-  children: [
-    TextButton(
-      child: Text(buttonText),
-      // onPressed: () async {
-      //   final url = widget.item.link;
-      //   if (await canLaunchUrl(Uri.parse(url))) {
-      //     await launchUrl(
-      //       Uri.parse(url),
-      //       webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
-      //     );
-      //   } else {
-      //     throw 'Could not launch $url';
-      //   }
-      // },
-      onPressed: () async {
-         try {
-      final content = await fetchContent(widget.item.link);
-      debugPrint(widget.item.link);
-      debugPrint(content);
-      showContentScreen(content);
-    } catch (e) {
-      // Handle error or show a message
-      print('Error fetching content: $e');
-    }
-      },
-    ),
-  ],
-),
+                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                            child: Text(
+                              htmlparser
+                                      .parse(widget.item.content)
+                                      .querySelector('p')
+                                      ?.text ??
+                                  '',
+                              style: const TextStyle(
+                                fontSize: 14.0,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black54,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          ButtonBar(
+                            children: [
+                              TextButton(
+                                child: Text(buttonText),
+                                // onPressed: () async {
+                                //   final url = widget.item.link;
+                                //   if (await canLaunchUrl(Uri.parse(url))) {
+                                //     await launchUrl(
+                                //       Uri.parse(url),
+                                //       webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
+                                //     );
+                                //   } else {
+                                //     throw 'Could not launch $url';
+                                //   }
+                                // },
+                                onPressed: () async {
+                                  try {
+                                    final content =
+                                        await fetchContent(widget.item.link);
+                                    // debugPrint(widget.item.link);
+                                    // debugPrint(content);
+                                    showContentScreen(
+                                        context,
+                                        widget.item.title,
+                                        widget.item.thumbnail,
+                                        content,
+                                        widget.item.link);
+                                  } catch (e) {
+                                    // Handle error or show a message
+                                    print('Error fetching content: $e');
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ],
@@ -361,6 +361,3 @@ Future<String> fetchContent(String url) async {
         ));
   }
 }
-
-
-
