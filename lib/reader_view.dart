@@ -73,7 +73,7 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
                               };
                             case 'p':
                               return {
-                                'font-size': '20px',
+                                'font-size': '16px',
                                 'font-family': 'Lato',
                                 'line-height': '2',
                                 'font-weight': '400'

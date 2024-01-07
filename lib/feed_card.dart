@@ -25,7 +25,7 @@ class _FeedItemCardState extends State<FeedItemCard>
   @override
   bool get wantKeepAlive => true;
   double elevation = 2;
-  String buttonText = 'Read in browser';
+  String buttonText = 'Read more';
 
   Color? _dominantColor;
   final double coreshadowOpacity = .1;
