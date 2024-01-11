@@ -30,10 +30,10 @@ class _FeedItemCardState extends State<FeedItemCard>
   Color? _dominantColor;
   final double coreshadowOpacity = .1;
   final double castshadowOpacity = .08;
-  final double coreshadowBlur = 3;
+  final double coreshadowBlur = 6;
   final double castshadowBlur = 12;
-  final double coreshadowSpread = 1;
-  final double castshadowSpread = 8;
+  final double coreshadowSpread = 2;
+  final double castshadowSpread = 6;
 
   late BoxShadow boxShadowCore = BoxShadow(
     color: Colors.grey.withOpacity(coreshadowOpacity),
@@ -285,17 +285,25 @@ class _FeedItemCardState extends State<FeedItemCard>
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                            child: Text(
-                              DateFormat('H:mm a d/M/y').format(
-                                DateTime.parse(widget.item.created).toLocal(),
-                              ),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black54,
-                              ),
-                            ),
+                            child: () {
+                              String dateText;
+                              try {
+                                dateText = DateFormat('H:mm a d/M/y').format(
+                                  DateTime.parse(widget.item.created).toLocal(),
+                                );
+                              } catch (e) {
+                                dateText = 'Invalid date';
+                              }
+                              return Text(
+                                dateText,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black54,
+                                ),
+                              );
+                            }(),
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
@@ -344,7 +352,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                                         widget.item.link);
                                   } catch (e) {
                                     // Handle error or show a message
-                                    print('Error fetching content: $e');
+                                    debugPrint('Error fetching content: $e');
                                   }
                                 },
                               ),

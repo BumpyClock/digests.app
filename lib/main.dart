@@ -46,6 +46,9 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "urls": [
+            
+            "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+            "https://www.engadget.com/rss.xml",
             "https://www.theverge.com/rss/index.xml",
             "https://www.polygon.com/rss/index.xml",
             "https://www.vox.com/rss/index.xml",
@@ -112,7 +115,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
           padding:
               const EdgeInsets.all(0.0), // Add padding to the MasonryGridView
           child: MasonryGridView.count(
-            addAutomaticKeepAlives: true,
+            addAutomaticKeepAlives: false,
             controller: controller,
             crossAxisCount: columnCount,
             mainAxisSpacing: 0,

@@ -79,9 +79,27 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
                             case 'img':
                               return {
                                 'max-height': '400px',
-                                'object-fit': 'cover',
-                                'border-radius': '8px',
-                                'margin': '0 auto'
+                                // 'object-fit': 'cover',
+                                'border-radius': '12px',
+                                'margin': '8 auto'
+                              };
+                              case 'figcaption':
+                              return {
+                                'font-size': '14px',
+                                'font-family': 'Lato',
+                                'font-weight': '400',
+                                'text-align': 'center',
+                                'margin': '24 auto',
+                                'opacity': '0.65',
+                              };
+                              case 'em':
+                              return {
+                                'font-size': '14px',
+                                'font-family': 'Lato',
+                                'font-weight': '400',
+                                'text-align': 'center',
+                                'margin': '8 auto',
+                                'opacity': '0.65',
                               };
                             // Add more cases as needed
                             default:

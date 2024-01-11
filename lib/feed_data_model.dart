@@ -110,7 +110,21 @@ class Item {
             : json['author'] as String? ?? '',
         published: json['published'] as String? ?? '',
         created: json['created'] as String? ?? '',
-        category: List<String>.from(json['category'] ?? []),
+      category: json['category'] == null 
+          ? <String>[] 
+          : (json['category'] as List<dynamic>).map<String>((item) {
+              try {
+                if (item is String) {
+                  return item;
+                } else if (item is Map<String, dynamic> && item.containsKey('\$text')) {
+                  return item['\$text'] as String;
+                } else {
+                  return '';
+                }
+              } catch (e) {
+                return '';
+              }
+            }).toList(),
         content: json['content'] as String? ?? '',
         media: List<dynamic>.from(json['media'] ?? []),
         enclosures: List<dynamic>.from(json['enclosures'] ?? []),
