@@ -41,7 +41,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   }
 
   _fetchRSSData() async {
-    var url = Uri.parse('http://192.168.1.51:3000/parse');
+    var url = Uri.parse('https://rss.bumpyclock.com/parse');
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
         body: json.encode({
@@ -115,7 +115,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
           padding:
               const EdgeInsets.all(0.0), // Add padding to the MasonryGridView
           child: MasonryGridView.count(
-            addAutomaticKeepAlives: false,
+            addAutomaticKeepAlives: true,
             controller: controller,
             crossAxisCount: columnCount,
             mainAxisSpacing: 0,

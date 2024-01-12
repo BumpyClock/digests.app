@@ -7,7 +7,7 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
   String imgTag = '<img src="$thumbnail" ></img>';
   String titleTag = '<h1>$title</h1>';
   String dividerTag = '<hr></hr>';
-  content = titleTag + dividerTag + imgTag + content;
+  content = titleTag + dividerTag + content;
   Navigator.of(context).push(
     MaterialPageRoute(
       builder: (context) => Scaffold(

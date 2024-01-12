@@ -57,7 +57,7 @@ class _FeedItemCardState extends State<FeedItemCard>
 
   Future<String> fetchContent(String url) async {
     final response = await http.post(
-      Uri.parse('http://192.168.1.51:3000/getreaderview'),
+      Uri.parse('https://rss.bumpyclock.com/getreaderview'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "urls": [url]
@@ -144,6 +144,24 @@ class _FeedItemCardState extends State<FeedItemCard>
         });
       }
     }
+  }
+
+  String formatPublishedDate(String dateStr) {
+    final rfc822 = RegExp(r'^\w{3}, (\d{2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-]\d{4})$');
+    final months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12};
+
+    final match = rfc822.firstMatch(dateStr);
+    final day = int.parse(match?.group(1) ?? '');
+    final month = months[match?.group(2) ?? ''];
+    final year = int.parse(match?.group(3) ?? '');
+    final hour = int.parse(match?.group(4) ?? '');
+    final minute = int.parse(match?.group(5) ?? '');
+    final second = int.parse(match?.group(6) ?? '');
+    final offset = int.parse(match?.group(7) ?? '');
+
+    final date = DateTime.utc(year, month!, day, hour, minute, second).add(Duration(minutes: offset));
+
+    return DateFormat('H:mm a d MMM y').format(date.toLocal());
   }
 
   @override
@@ -288,9 +306,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                             child: () {
                               String dateText;
                               try {
-                                dateText = DateFormat('H:mm a d/M/y').format(
-                                  DateTime.parse(widget.item.created).toLocal(),
-                                );
+                                dateText = formatPublishedDate(widget.item.published);                           
                               } catch (e) {
                                 dateText = 'Invalid date';
                               }
