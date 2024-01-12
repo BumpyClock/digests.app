@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 void showContentScreen(BuildContext context, String title, String thumbnail,
     String content, String link) {
-  String imgTag = '<img src="$thumbnail" ></img>';
+  // String imgTag = '<img src="$thumbnail" ></img>';
   String titleTag = '<h1>$title</h1>';
   String dividerTag = '<hr></hr>';
   content = titleTag + dividerTag + content;
