@@ -1,6 +1,6 @@
 {
-    "name": "feedbuddy",
-    "short_name": "feedbuddy",
+    "name": "Digests - RSS reader",
+    "short_name": "Digests",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

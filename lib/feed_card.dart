@@ -244,8 +244,10 @@ class _FeedItemCardState extends State<FeedItemCard>
                     imageUrl: imageUrl,
                     width: double.maxFinite,
                     fit: BoxFit.cover,
-                    // placeholder: (context, url) =>
-                    //     const CircularProgressIndicator(),
+                    placeholder: (context, url) => Container(
+                      height: double.maxFinite,
+                      color: Colors.grey,
+                    ),
                     errorWidget: (context, url, error) => Container(
                       height: 200,
                       color: Colors.red.shade50,
