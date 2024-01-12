@@ -33,27 +33,49 @@ class RSSFeedScreen extends StatefulWidget {
 
 class _RSSFeedScreenState extends State<RSSFeedScreen> {
   List<Item> _allItems = [];
+  static const STEP_SIZE = 8;
+  ScrollController controller = ScrollController();
+    late Future<List<Item>> _futureItems; // Declare a variable to store the future
+
+  int _currentMax = STEP_SIZE;
 
   @override
   void initState() {
     super.initState();
-    _fetchRSSData();
+    controller.addListener(_onScroll);
+        _futureItems = _fetchRSSData(); // Assign the future to the variable in initState
+
   }
 
-  _fetchRSSData() async {
+  void _onScroll() {
+    if (controller.position.pixels > controller.position.maxScrollExtent * 0.5) {
+      _loadMoreItems();
+    }
+  }
+
+  void _loadMoreItems() {
+    setState(() {
+      if (_currentMax < _allItems.length) {
+        _currentMax = _currentMax + STEP_SIZE;
+      }
+    });
+  }
+
+  Future<List<Item>> _fetchRSSData() async {
+    const urls = [
+      "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+      "https://www.engadget.com/rss.xml",
+      "https://www.theverge.com/rss/index.xml",
+      "https://www.polygon.com/rss/index.xml",
+      "https://www.vox.com/rss/index.xml",
+      "https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml",
+    ];
+
     var url = Uri.parse('https://rss.bumpyclock.com/parse');
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
         body: json.encode({
-          "urls": [
-            
-            "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
-            "https://www.engadget.com/rss.xml",
-            "https://www.theverge.com/rss/index.xml",
-            "https://www.polygon.com/rss/index.xml",
-            "https://www.vox.com/rss/index.xml",
-            "https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml",
-          ]
+          "urls": urls
         }));
 
     if (response.statusCode == 200) {
@@ -71,13 +93,12 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
         }
       }
 
-      setState(() {
-        _allItems = items; // Update _allItems with the combined list of items
-      });
+      return items;
     } else {
       // Handle error
       debugPrint(
           'Error: Server responded with status code ${response.statusCode}');
+      throw Exception('Failed to load feeds');
     }
   }
 
@@ -85,53 +106,54 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   Widget build(BuildContext context) {
     double viewportWidth = MediaQuery.of(context).size.width;
     int columnCount = calculateColumnCount(viewportWidth);
-    // double padding = viewportWidth * 0.02; // 2% of viewport width
-    ScrollController controller =
-        ScrollController(); // Create a ScrollController
     return Scaffold(
-      // appBar: AppBar(
-      //   // title: const Text('Your Feeds'),
-      //   backgroundColor: Colors.grey.shade50.withOpacity(0.8),
-      //   elevation: 0,
-      //   shadowColor: Colors.amber.shade400.withOpacity(0.1),
-      //   scrolledUnderElevation: 12,
-      //   // surfaceTintColor: Colors.amber.shade200.withOpacity(.4),
-      //   toolbarHeight: 48,
-      //   centerTitle: true,
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.menu),
-      //     onPressed: () {},
-      //   ),
-      //   actions: [
-      //     IconButton(
-      //       icon: const Icon(Icons.search),
-      //       onPressed: () {},
-      //     ),
-      //   ],
-      // ),
-      body: Scrollbar(
-        controller: controller, // Use the ScrollController for the Scrollbar
-        child: Padding(
-          padding:
-              const EdgeInsets.all(0.0), // Add padding to the MasonryGridView
-          child: MasonryGridView.count(
-            addAutomaticKeepAlives: true,
-            controller: controller,
-            crossAxisCount: columnCount,
-            mainAxisSpacing: 0,
-            crossAxisSpacing: 0,
-            itemCount: _allItems.length,
-            itemBuilder: (BuildContext context, int index) => Padding(
-              padding:
-                  const EdgeInsets.all(8.0), // Add padding to the child widgets
-              child: FeedItemCard(item: _allItems[index]),
-            ),
-          ),
-        ),
+      body: FutureBuilder<List<Item>>(
+        future: _futureItems,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            _allItems = snapshot.data!;
+            return RefreshIndicator(
+              onRefresh: () async {
+                setState(() {});
+              },
+              child: Scrollbar(
+                controller: controller,
+                child: Padding(
+                  padding: const EdgeInsets.all(0.0),
+                  child: MasonryGridView.count(
+                    addAutomaticKeepAlives: true,
+                    controller: controller,
+                    crossAxisCount: columnCount,
+                    mainAxisSpacing: 0,
+                    crossAxisSpacing: 0,
+                    itemCount: _currentMax,
+                    itemBuilder: (BuildContext context, int index) {
+                      if (index < _allItems.length) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FeedItemCard(item: _allItems[index]),
+                        );
+                      } else {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
 }
+
 
 int calculateColumnCount(double viewportWidth) {
   int columnCount = 1; // Default column count for small screens
