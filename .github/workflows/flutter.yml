@@ -1,10 +1,6 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+name: flutter_build
 
-name: Dart
-
+# This workflow will trigger on push or pull request events to the main branch
 on:
   push:
     branches: [ "main" ]
@@ -12,37 +8,57 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  # This job builds the web version of the Flutter app
+  build_web:
     runs-on: ubuntu-latest
 
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE
       - uses: actions/checkout@v3
-      
-
-      # Note: This workflow uses the latest stable version of the Dart SDK.
-      # You can specify other versions if desired, see documentation here:
-      # https://github.com/dart-lang/setup-dart/blob/main/README.md
-      # - uses: dart-lang/setup-dart@v1
-      - uses: subosito/flutter-action@v1
+      # Sets up Java JDK 11 on the runner
+      - uses: actions/setup-java@v2
         with:
-         flutter-version: '3.16.7'
+            distribution: 'zulu'
+            java-version: '11'
+      # Sets up Flutter SDK on the runner
+      - uses: subosito/flutter-action@v4
+        with:
          channel: 'stable'
-
+      # Prints the Flutter version
+      - run: flutter --version
+      # Installs dependencies for the Flutter project
       - name: Install dependencies
         run: flutter pub get
-
-      # Uncomment this step to verify the use of 'dart format' on each commit.
-      # - name: Verify formatting
-      #   run: dart format --output=none --set-exit-if-changed .
-
-      # Consider passing '--fatal-infos' for slightly stricter analysis.
+      # Analyzes the project's Dart source code
       - name: Analyze project source
         run: dart analyze
-
-      # Your project will need to have tests in test/ and a dependency on
-      # package:test for this step to succeed. Note that Flutter projects will
-      # want to change this to 'flutter test'.
+      # Builds the web version of the Flutter app
       - name: Build web
         run: flutter build web
-      - name: build Windows
-        run: flutter build windows
+
+  # This job builds the Windows version of the Flutter app
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v3
+      # Sets up Flutter SDK on the runner
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      # Enables Flutter desktop support
+      - run: flutter config --enable-windows-desktop
+      # Builds the Windows version of the Flutter app
+      - run: flutter build windows
+  
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: |
+              sudo apt-get install -y ninja-build libgtk-3-dev
+              flutter config --enable-linux-desktop
+              flutter build linux
