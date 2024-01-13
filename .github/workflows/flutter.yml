@@ -21,7 +21,7 @@ jobs:
             distribution: 'zulu'
             java-version: '11'
       # Sets up Flutter SDK on the runner
-      - uses: subosito/flutter-action@v4
+      - uses: subosito/flutter-action@v2
         with:
          channel: 'stable'
       # Prints the Flutter version
