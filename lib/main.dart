@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -36,6 +35,7 @@ class RSSFeedScreen extends StatefulWidget {
 class _RSSFeedScreenState extends State<RSSFeedScreen> {
   List<Item> _allItems = [];
   int step_size = 12;
+  bool _isLoading = false;
   ScrollController controller = ScrollController();
   late Future<List<Item>>
       _futureItems; // Declare a variable to store the future
@@ -51,25 +51,36 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   }
 
   void _onScroll() {
-    if (controller.position.pixels >
-        controller.position.maxScrollExtent * 0.65) {
+    if (!_isLoading &&
+        controller.position.pixels == controller.position.maxScrollExtent) {
       _loadMoreItems();
     }
   }
 
   void _loadMoreItems() {
     setState(() {
+      _isLoading = true; // Set loading to true when starting to load items
+    });
+
+    // Simulate network delay
+    Future.delayed(const Duration(seconds: 2), () {
       if (_currentMax < _allItems.length) {
         _currentMax = min(_currentMax + step_size, _allItems.length);
       }
+
+      // Delay the hiding of the loading indicator for 1 second
+      Future.delayed(const Duration(seconds: 1), () {
+        setState(() {
+          _isLoading = false; // Set loading to false when items are loaded
+        });
+      });
     });
   }
 
   Future<List<Item>> _fetchRSSData() async {
     const urls = [
-            "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
-
-            "https://www.theverge.com/rss/index.xml",
+      "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+      "https://www.theverge.com/rss/index.xml",
       "https://www.engadget.com/rss.xml",
       "https://www.polygon.com/rss/index.xml",
       "https://www.vox.com/rss/index.xml",
@@ -128,25 +139,35 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
                 controller: controller,
                 child: Padding(
                   padding: const EdgeInsets.all(0.0),
-                  child: MasonryGridView.count(
-                    addAutomaticKeepAlives: true,
-                    controller: controller,
-                    crossAxisCount: columnCount ?? 2,
-                    mainAxisSpacing: 0,
-                    crossAxisSpacing: 0,
-                    itemCount: _currentMax,
-                    itemBuilder: (BuildContext context, int index) {
-                      if (index < _allItems.length) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: FeedItemCard(item: _allItems[index]),
-                        );
-                      } else {
-                        return const Center(
+                  child: Column(
+                    children: <Widget>[
+                      Expanded(
+                        child: MasonryGridView.count(
+                          addAutomaticKeepAlives: true,
+                          controller: controller,
+                          crossAxisCount: columnCount ?? 2,
+                          mainAxisSpacing: 0,
+                          crossAxisSpacing: 0,
+                          itemCount: _currentMax,
+                          itemBuilder: (BuildContext context, int index) {
+                            if (index < _allItems.length) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: FeedItemCard(item: _allItems[index]),
+                              );
+                            } else {
+                              return SizedBox
+                                  .shrink(); // Return an empty widget when there are no more items to load
+                            }
+                          },
+                        ),
+                      ),
+                      if (_isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
+                        ),
+                    ],
                   ),
                 ),
               ),
