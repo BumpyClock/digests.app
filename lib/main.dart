@@ -67,12 +67,12 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
 
   Future<List<Item>> _fetchRSSData() async {
     const urls = [
-      "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+
+            "https://www.theverge.com/rss/index.xml",
       "https://www.engadget.com/rss.xml",
-      "https://www.theverge.com/rss/index.xml",
       "https://www.polygon.com/rss/index.xml",
       "https://www.vox.com/rss/index.xml",
-      "https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml",
     ];
 
     var url = Uri.parse('https://rss.bumpyclock.com/parse');

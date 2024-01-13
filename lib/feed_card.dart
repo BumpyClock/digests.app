@@ -28,18 +28,18 @@ class _FeedItemCardState extends State<FeedItemCard>
   String buttonText = 'Read more';
   bool _isHovering = false;
   Color? _dominantColor;
-  final double coreshadowOpacity = .8;
+  final double coreshadowOpacity = .08;
   final double castshadowOpacity = .04;
-  final double coreshadowBlur = .125;
+  final double coreshadowBlur = 1;
   final double castshadowBlur = 4;
-  final double coreshadowSpread = .125;
+  final double coreshadowSpread = 1;
   final double castshadowSpread = 4;
   final RegExp imageRegExp = RegExp(r'<img.+?src="(.+?)".*?>');
    BoxShadow boxShadowCore = BoxShadow();
    BoxShadow boxShadowCast = BoxShadow();
+Uint8List transparentImage = base64Decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 
   BoxShadow generateBoxShadow(double opacity, double spread, double blur) {
-    debugPrint('generateBoxShadow : color: ${_dominantColor.toString()}');
     return BoxShadow(
       
       color: (_dominantColor ?? Colors.grey).withOpacity(opacity),
@@ -72,10 +72,35 @@ class _FeedItemCardState extends State<FeedItemCard>
     }
   }
 
+bool isBase64(String str) {
+  try {
+    base64.decode(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+ImageProvider buildImage(String imageUrl) {
+  try {
+  if (imageUrl.startsWith('data:image')) {
+    final base64Image = imageUrl.split(',').last;
+    debugPrint('base64Image: $base64Image');
+    final decodedImage = base64Decode(base64Image);
+    debugPrint('decodedImage: $decodedImage');
+    return MemoryImage(decodedImage);
+  } else {
+    return CachedNetworkImageProvider(imageUrl);
+  }
+  }
+  catch(e){
+    debugPrint('Error building image: $e');
+    return MemoryImage(transparentImage);
+  }
+}
   Future<void> _updatePaletteGenerator() async {
-    if (kIsWeb) {
+  if (kIsWeb || widget.item.thumbnail.startsWith('data:image')) {
       setState(() {
-        buttonText = 'Open in new tab';
+        buttonText = 'Read more';
         _dominantColor = Colors.grey.withOpacity(.12);
         boxShadowCore = BoxShadow(
           color: _dominantColor!.withOpacity(coreshadowOpacity),
@@ -95,6 +120,7 @@ class _FeedItemCardState extends State<FeedItemCard>
     // If running in a web environment, skip palette generation
 
     try {
+      
       final PaletteGenerator paletteGenerator =
           await PaletteGenerator.fromImageProvider(
         CachedNetworkImageProvider(widget.item.thumbnail),
@@ -104,8 +130,7 @@ class _FeedItemCardState extends State<FeedItemCard>
         setState(() {
           // Choose the dominant color or fallback to a default color
           _dominantColor =
-              paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
-              debugPrint(_dominantColor.toString());
+              paletteGenerator.dominantColor?.color ?? Colors.blueGrey;
         });
       }
     } catch (e) {
@@ -137,7 +162,7 @@ class _FeedItemCardState extends State<FeedItemCard>
       final date = DateFormat('EEE, dd MMM yyyy HH:mm:ss Z').parse(dateStr);
       return DateFormat('H:mm a d MMM y').format(date.toLocal());
     } catch (e) {
-      return 'Invalid date';
+      return '';
     }
   }
 
@@ -154,6 +179,9 @@ class _FeedItemCardState extends State<FeedItemCard>
 
     super.build(context);
     String imageUrl = widget.item.thumbnail;
+    if(isBase64(imageUrl)){
+      imageUrl = 'data:image/png;base64,$imageUrl';
+    }
     if (imageUrl.isEmpty) {
       // If thumbnail is empty, use the first image from the content
       Iterable<Match> matches = imageRegExp.allMatches(widget.item.content);
@@ -163,7 +191,7 @@ class _FeedItemCardState extends State<FeedItemCard>
     }
 
     return AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 75),
         curve: Curves.easeInOutCubic,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(23),
@@ -184,49 +212,28 @@ class _FeedItemCardState extends State<FeedItemCard>
               setState(() => _isHovering = false),
           child: RepaintBoundary(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 125),
               curve: Curves.easeInOutCubic,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(23),
-                boxShadow: _dominantColor != null
-                    ? [
-                        boxShadowCore,
-                        boxShadowCast,
-                      ]
-                    : [],
+                
               ),
               child: Card(
                 clipBehavior: Clip.antiAlias,
-                elevation: elevation,
+                // elevation: elevation,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(23),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      memCacheHeight: 300,
-                      maxWidthDiskCache: 300,
-                      width: double.maxFinite,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const SizedBox(
-                        height: 200,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            strokeCap: StrokeCap.round,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.blue),
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        height: 200,
-                        color: const Color.fromARGB(255, 31, 30, 30),
-                      ),
-                    ),
-                    Stack(
+FadeInImage.memoryNetwork(
+  placeholder: transparentImage, // kTransparentImage is a 1x1 transparent pixel
+  image: imageUrl,
+  fit: BoxFit.cover,
+  width: double.maxFinite,
+  height: 200,
+),                   Stack(
                       children: [
                         Positioned.fill(
                           child: ClipRRect(
@@ -239,8 +246,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                                   child: Container(
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
-                                        image: CachedNetworkImageProvider(
-                                            imageUrl),
+                                        image: buildImage(imageUrl),
                                         opacity: .7,
                                         fit: BoxFit.cover,
                                       ),
@@ -262,7 +268,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                               child: Text(
                                 widget.item.title,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontFamily: 'Lato',
                                   fontWeight: FontWeight.w700,
                                   height: 1.33,
@@ -270,32 +276,33 @@ class _FeedItemCardState extends State<FeedItemCard>
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                              child: Text(
-                                widget.item.author,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: 'Lato',
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ),
+                            (widget.item.author?.isNotEmpty ?? false)
+                                ? Padding(
+                                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                                    child: Text(
+                                      widget.item.author,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Lato',
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  )
+                                : Container(),  // Replace with your placeholder widget
                             Padding(
                               padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                               child: () {
                                 String dateText;
                                 try {
-                                  dateText = formatPublishedDate(
-                                      widget.item.published);
+                                  dateText = formatPublishedDate(widget.item.published ?? widget.item.created);
                                 } catch (e) {
                                   dateText = 'Invalid date';
                                 }
                                 return Text(
                                   dateText,
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontFamily: 'Lato',
                                     fontWeight: FontWeight.w700,
                                     color: Colors.black54,
@@ -329,8 +336,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                                     try {
                                       final content =
                                           await fetchContent(widget.item.link);
-                                      // debugPrint(widget.item.link);
-                                      // debugPrint(content);
+                                      
                                       showContentScreen(
                                           context,
                                           widget.item.title,
