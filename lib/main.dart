@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -33,22 +35,24 @@ class RSSFeedScreen extends StatefulWidget {
 
 class _RSSFeedScreenState extends State<RSSFeedScreen> {
   List<Item> _allItems = [];
-  static const STEP_SIZE = 8;
+  int step_size = 12;
   ScrollController controller = ScrollController();
-    late Future<List<Item>> _futureItems; // Declare a variable to store the future
-
-  int _currentMax = STEP_SIZE;
+  late Future<List<Item>>
+      _futureItems; // Declare a variable to store the future
+  int _currentMax = 0;
 
   @override
   void initState() {
     super.initState();
     controller.addListener(_onScroll);
-        _futureItems = _fetchRSSData(); // Assign the future to the variable in initState
-
+    _currentMax = step_size;
+    _futureItems =
+        _fetchRSSData(); // Assign the future to the variable in initState
   }
 
   void _onScroll() {
-    if (controller.position.pixels > controller.position.maxScrollExtent * 0.5) {
+    if (controller.position.pixels >
+        controller.position.maxScrollExtent * 0.65) {
       _loadMoreItems();
     }
   }
@@ -56,7 +60,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   void _loadMoreItems() {
     setState(() {
       if (_currentMax < _allItems.length) {
-        _currentMax = _currentMax + STEP_SIZE;
+        _currentMax = min(_currentMax + step_size, _allItems.length);
       }
     });
   }
@@ -74,9 +78,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
     var url = Uri.parse('https://rss.bumpyclock.com/parse');
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "urls": urls
-        }));
+        body: json.encode({"urls": urls}));
 
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(response.body);
@@ -105,7 +107,9 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   @override
   Widget build(BuildContext context) {
     double viewportWidth = MediaQuery.of(context).size.width;
-    int columnCount = calculateColumnCount(viewportWidth);
+    Map<String, int> layout = calculateLayout(viewportWidth);
+    int? columnCount = layout['columnCount'];
+    step_size = layout['stepSize']!;
     return Scaffold(
       body: FutureBuilder<List<Item>>(
         future: _futureItems,
@@ -127,7 +131,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
                   child: MasonryGridView.count(
                     addAutomaticKeepAlives: true,
                     controller: controller,
-                    crossAxisCount: columnCount,
+                    crossAxisCount: columnCount ?? 2,
                     mainAxisSpacing: 0,
                     crossAxisSpacing: 0,
                     itemCount: _currentMax,
@@ -154,21 +158,27 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
   }
 }
 
-
-int calculateColumnCount(double viewportWidth) {
+Map<String, int> calculateLayout(double viewportWidth) {
   int columnCount = 1; // Default column count for small screens
+  int stepSize = 10; // Default step size for small screens
+
   if (viewportWidth > 650) {
     columnCount = 2;
+    stepSize = 4;
   }
   if (viewportWidth > 1080) {
     columnCount = 3;
+    stepSize = 10;
   }
   if (viewportWidth > 1240) {
     columnCount = 4;
+    stepSize = 16;
   }
   if (viewportWidth > 1600) {
     columnCount = 5;
+    stepSize = 20;
   }
   // Add more conditions as needed
-  return columnCount;
+
+  return {'columnCount': columnCount, 'stepSize': stepSize};
 }

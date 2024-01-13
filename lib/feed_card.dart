@@ -26,32 +26,34 @@ class _FeedItemCardState extends State<FeedItemCard>
   bool get wantKeepAlive => true;
   double elevation = 2;
   String buttonText = 'Read more';
-
+  bool _isHovering = false;
   Color? _dominantColor;
-  final double coreshadowOpacity = .1;
-  final double castshadowOpacity = .08;
-  final double coreshadowBlur = 6;
-  final double castshadowBlur = 12;
-  final double coreshadowSpread = 2;
-  final double castshadowSpread = 6;
+  final double coreshadowOpacity = .9;
+  final double castshadowOpacity = .04;
+  final double coreshadowBlur = .25;
+  final double castshadowBlur = 4;
+  final double coreshadowSpread = .25;
+  final double castshadowSpread = 4;
+  final RegExp imageRegExp = RegExp(r'<img.+?src="(.+?)".*?>');
+  late BoxShadow boxShadowCore;
+  late BoxShadow boxShadowCast;
 
-  late BoxShadow boxShadowCore = BoxShadow(
-    color: Colors.grey.withOpacity(coreshadowOpacity),
-    spreadRadius: 2,
-    blurRadius: 6,
-    offset: const Offset(0, 0),
-  );
-
-  late BoxShadow boxShadowCast = BoxShadow(
-    color: Colors.grey.withOpacity(castshadowOpacity),
-    spreadRadius: 6,
-    blurRadius: 12,
-    offset: const Offset(0, 0),
-  );
+  BoxShadow generateBoxShadow(double opacity, double spread, double blur) {
+    return BoxShadow(
+      color: (_dominantColor ?? Colors.grey).withOpacity(opacity),
+      spreadRadius: spread,
+      blurRadius: blur,
+      offset: const Offset(0, 2),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
+    boxShadowCore =
+        generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
+    boxShadowCast =
+        generateBoxShadow(castshadowOpacity, castshadowSpread, castshadowBlur);
     _updatePaletteGenerator();
   }
 
@@ -77,18 +79,18 @@ class _FeedItemCardState extends State<FeedItemCard>
     if (kIsWeb) {
       setState(() {
         buttonText = 'Open in new tab';
-        _dominantColor = Colors.blueGrey;
+        _dominantColor = Colors.grey.withOpacity(.12);
         boxShadowCore = BoxShadow(
           color: _dominantColor!.withOpacity(coreshadowOpacity),
           spreadRadius: coreshadowSpread,
           blurRadius: coreshadowBlur,
-          offset: const Offset(0, 0),
+          offset: const Offset(0, 2),
         );
         boxShadowCast = BoxShadow(
           color: _dominantColor!.withOpacity(castshadowOpacity),
           spreadRadius: castshadowSpread,
           blurRadius: castshadowBlur,
-          offset: const Offset(0, 0),
+          offset: const Offset(0, 2),
         );
       });
       return;
@@ -106,27 +108,13 @@ class _FeedItemCardState extends State<FeedItemCard>
           // Choose the dominant color or fallback to a default color
           _dominantColor =
               paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
-          boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(coreshadowOpacity) ??
-                Colors.transparent,
-            spreadRadius: coreshadowSpread,
-            blurRadius: coreshadowBlur,
-            offset: const Offset(0, 0),
-          );
-          boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(castshadowOpacity) ??
-                Colors.transparent,
-            spreadRadius: castshadowSpread,
-            blurRadius: castshadowBlur,
-            offset: const Offset(0, 0),
-          );
         });
       }
     } catch (e) {
       debugPrint('Error generating palette: $e');
       if (mounted) {
         setState(() {
-          _dominantColor = Colors.blueGrey;
+          _dominantColor = Colors.black.withOpacity(.12);
           boxShadowCore = BoxShadow(
             color: _dominantColor?.withOpacity(coreshadowOpacity) ??
                 Colors.transparent,
@@ -147,240 +135,224 @@ class _FeedItemCardState extends State<FeedItemCard>
   }
 
   String formatPublishedDate(String dateStr) {
-    final rfc822 = RegExp(r'^\w{3}, (\d{2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-]\d{4})$');
-    final months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12};
-
-    final match = rfc822.firstMatch(dateStr);
-    final day = int.parse(match?.group(1) ?? '');
-    final month = months[match?.group(2) ?? ''];
-    final year = int.parse(match?.group(3) ?? '');
-    final hour = int.parse(match?.group(4) ?? '');
-    final minute = int.parse(match?.group(5) ?? '');
-    final second = int.parse(match?.group(6) ?? '');
-    final offset = int.parse(match?.group(7) ?? '');
-
-    final date = DateTime.utc(year, month!, day, hour, minute, second).add(Duration(minutes: offset));
-
-    return DateFormat('H:mm a d MMM y').format(date.toLocal());
+    try {
+      final date = DateFormat('EEE, dd MMM yyyy HH:mm:ss Z').parse(dateStr);
+      return DateFormat('H:mm a d MMM y').format(date.toLocal());
+    } catch (e) {
+      return 'Invalid date';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    BoxShadow coreshadowRest = BoxShadow(
-      color:
-          _dominantColor?.withOpacity(coreshadowOpacity) ?? Colors.transparent,
-      spreadRadius: coreshadowSpread,
-      blurRadius: coreshadowBlur,
-      offset: const Offset(0, 0),
-    );
-
-    BoxShadow castshadowRest = BoxShadow(
-      color:
-          _dominantColor?.withOpacity(castshadowOpacity) ?? Colors.transparent,
-      spreadRadius: castshadowSpread,
-      blurRadius: castshadowBlur,
-      offset: const Offset(0, 0),
-    );
-
-    BoxShadow coreshadowHover = BoxShadow(
-      color: _dominantColor?.withOpacity(coreshadowOpacity + .1) ??
-          Colors.transparent,
-      spreadRadius: coreshadowSpread,
-      blurRadius: coreshadowBlur,
-      offset: const Offset(0, 0),
-    );
-
-    BoxShadow castshadowHover = BoxShadow(
-      color: _dominantColor?.withOpacity(castshadowOpacity + .1) ??
-          Colors.transparent,
-      spreadRadius: castshadowSpread,
-      blurRadius: castshadowBlur,
-      offset: const Offset(0, 0),
-    );
+    BoxShadow coreshadowRest =
+        generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
+    BoxShadow castshadowRest =
+        generateBoxShadow(castshadowOpacity, castshadowSpread, castshadowBlur);
+    BoxShadow coreshadowHover = generateBoxShadow(
+        coreshadowOpacity + .1, coreshadowSpread + 1, coreshadowBlur + 2);
+    BoxShadow castshadowHover = generateBoxShadow(
+        castshadowOpacity + .15, castshadowSpread + 6, castshadowBlur + 6);
 
     super.build(context);
     String imageUrl = widget.item.thumbnail;
     if (imageUrl.isEmpty) {
       // If thumbnail is empty, use the first image from the content
-      RegExp regExp = RegExp(r'<img.+?src="(.+?)".*?>');
-      Iterable<Match> matches = regExp.allMatches(widget.item.content);
+      Iterable<Match> matches = imageRegExp.allMatches(widget.item.content);
       if (matches.isNotEmpty) {
         imageUrl = matches.first.group(1) ?? '';
       }
     }
 
-    return MouseRegion(
-        onEnter: (PointerEnterEvent event) => setState(() => {
-              boxShadowCore = coreshadowHover,
-              boxShadowCast = castshadowHover,
-            }),
-        onExit: (PointerExitEvent event) => setState(() => {
-              boxShadowCore = coreshadowRest,
-              boxShadowCast = castshadowRest,
-            }),
-        child: RepaintBoundary(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOutCubic,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(23),
-              boxShadow: _dominantColor != null
-                  ? [
-                      boxShadowCore,
-                      boxShadowCast,
-                    ]
-                  : [],
-            ),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              elevation: elevation,
-              shape: RoundedRectangleBorder(
+    return AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(23),
+          boxShadow: _isHovering
+              ? [
+                  coreshadowHover,
+                  castshadowHover,
+                ]
+              : [
+                  coreshadowRest,
+                  castshadowRest,
+                ],
+        ),
+        child: MouseRegion(
+          onEnter: (PointerEnterEvent event) =>
+              setState(() => _isHovering = true),
+          onExit: (PointerExitEvent event) =>
+              setState(() => _isHovering = false),
+          child: RepaintBoundary(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOutCubic,
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(23),
+                boxShadow: _dominantColor != null
+                    ? [
+                        boxShadowCore,
+                        boxShadowCast,
+                      ]
+                    : [],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    width: double.maxFinite,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: double.maxFinite,
-                      color: Colors.grey,
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 200,
-                      color: Colors.red.shade50,
-                    ),
-                  ),
-                  Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: CachedNetworkImageProvider(imageUrl),
-                              opacity: .5,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                              child: Container(
-                                alignment: Alignment.center,
-                                color: Colors.white.withOpacity(0.35),
-                              ),
-                            ),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                elevation: elevation,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(23),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      memCacheHeight: 300,
+                      maxWidthDiskCache: 300,
+                      width: double.maxFinite,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            strokeCap: StrokeCap.round,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.blue),
                           ),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                            child: Text(
-                              widget.item.title,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w700,
-                                height: 1.33,
-                                color: Colors.black,
-                              ),
+                      errorWidget: (context, url, error) => Container(
+                        height: 200,
+                        color: const Color.fromARGB(255, 31, 30, 30),
+                      ),
+                    ),
+                    Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                ImageFiltered(
+                                  imageFilter:
+                                      ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: CachedNetworkImageProvider(
+                                            imageUrl),
+                                        opacity: .7,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  color: Colors.white.withOpacity(0.55),
+                                ),
+                              ],
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                            child: Text(
-                              widget.item.author,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                            child: () {
-                              String dateText;
-                              try {
-                                dateText = formatPublishedDate(widget.item.published);                           
-                              } catch (e) {
-                                dateText = 'Invalid date';
-                              }
-                              return Text(
-                                dateText,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                              child: Text(
+                                widget.item.title,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 18,
                                   fontFamily: 'Lato',
                                   fontWeight: FontWeight.w700,
+                                  height: 1.33,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                              child: Text(
+                                widget.item.author,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black54,
                                 ),
-                              );
-                            }(),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                            child: Text(
-                              htmlparser
-                                      .parse(widget.item.content)
-                                      .querySelector('p')
-                                      ?.text ??
-                                  '',
-                              style: const TextStyle(
-                                fontSize: 14.0,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black54,
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          ButtonBar(
-                            children: [
-                              TextButton(
-                                child: Text(buttonText),
-                                // onPressed: () async {
-                                //   final url = widget.item.link;
-                                //   if (await canLaunchUrl(Uri.parse(url))) {
-                                //     await launchUrl(
-                                //       Uri.parse(url),
-                                //       webOnlyWindowName: kIsWeb ? '_blank' : null, // open in a new tab on web
-                                //     );
-                                //   } else {
-                                //     throw 'Could not launch $url';
-                                //   }
-                                // },
-                                onPressed: () async {
-                                  try {
-                                    final content =
-                                        await fetchContent(widget.item.link);
-                                    // debugPrint(widget.item.link);
-                                    // debugPrint(content);
-                                    showContentScreen(
-                                        context,
-                                        widget.item.title,
-                                        widget.item.thumbnail,
-                                        content,
-                                        widget.item.link);
-                                  } catch (e) {
-                                    // Handle error or show a message
-                                    debugPrint('Error fetching content: $e');
-                                  }
-                                },
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                              child: () {
+                                String dateText;
+                                try {
+                                  dateText = formatPublishedDate(
+                                      widget.item.published);
+                                } catch (e) {
+                                  dateText = 'Invalid date';
+                                }
+                                return Text(
+                                  dateText,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'Lato',
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black54,
+                                  ),
+                                );
+                              }(),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                              child: Text(
+                                htmlparser
+                                        .parse(widget.item.content)
+                                        .querySelector('p')
+                                        ?.text ??
+                                    '',
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black54,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                            ),
+                            ButtonBar(
+                              children: [
+                                TextButton(
+                                  child: Text(buttonText),
+                                  onPressed: () async {
+                                    try {
+                                      final content =
+                                          await fetchContent(widget.item.link);
+                                      // debugPrint(widget.item.link);
+                                      // debugPrint(content);
+                                      showContentScreen(
+                                          context,
+                                          widget.item.title,
+                                          widget.item.thumbnail,
+                                          content,
+                                          widget.item.link);
+                                    } catch (e) {
+                                      // Handle error or show a message
+                                      debugPrint('Error fetching content: $e');
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
