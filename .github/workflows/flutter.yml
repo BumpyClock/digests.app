@@ -10,7 +10,7 @@ on:
 jobs:
   # This job builds the web version of the Flutter app
   build_web:
-    runs-on: self-hosted
+    runs-on: digests-app-selfhosted-runner
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE
