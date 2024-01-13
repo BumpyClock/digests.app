@@ -10,7 +10,7 @@ on:
 jobs:
   # This job builds the web version of the Flutter app
   build_web:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE
@@ -52,7 +52,7 @@ jobs:
       - run: flutter build windows
   
   build_linux:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
