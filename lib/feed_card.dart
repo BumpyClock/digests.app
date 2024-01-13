@@ -28,33 +28,31 @@ class _FeedItemCardState extends State<FeedItemCard>
   String buttonText = 'Read more';
   bool _isHovering = false;
   Color? _dominantColor;
-  final double coreshadowOpacity = .9;
+  final double coreshadowOpacity = .8;
   final double castshadowOpacity = .04;
-  final double coreshadowBlur = .25;
+  final double coreshadowBlur = .125;
   final double castshadowBlur = 4;
-  final double coreshadowSpread = .25;
+  final double coreshadowSpread = .125;
   final double castshadowSpread = 4;
   final RegExp imageRegExp = RegExp(r'<img.+?src="(.+?)".*?>');
-  late BoxShadow boxShadowCore;
-  late BoxShadow boxShadowCast;
+   BoxShadow boxShadowCore = BoxShadow();
+   BoxShadow boxShadowCast = BoxShadow();
 
   BoxShadow generateBoxShadow(double opacity, double spread, double blur) {
+    debugPrint('generateBoxShadow : color: ${_dominantColor.toString()}');
     return BoxShadow(
+      
       color: (_dominantColor ?? Colors.grey).withOpacity(opacity),
       spreadRadius: spread,
       blurRadius: blur,
-      offset: const Offset(0, 2),
+      offset: const Offset(0, 0),
     );
   }
 
   @override
   void initState() {
     super.initState();
-    boxShadowCore =
-        generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
-    boxShadowCast =
-        generateBoxShadow(castshadowOpacity, castshadowSpread, castshadowBlur);
-    _updatePaletteGenerator();
+         _updatePaletteGenerator();
   }
 
   Future<String> fetchContent(String url) async {
@@ -65,7 +63,6 @@ class _FeedItemCardState extends State<FeedItemCard>
         "urls": [url]
       }),
     );
-    // debugPrint(response.body);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -84,13 +81,13 @@ class _FeedItemCardState extends State<FeedItemCard>
           color: _dominantColor!.withOpacity(coreshadowOpacity),
           spreadRadius: coreshadowSpread,
           blurRadius: coreshadowBlur,
-          offset: const Offset(0, 2),
+          offset: const Offset(0, 0),
         );
         boxShadowCast = BoxShadow(
           color: _dominantColor!.withOpacity(castshadowOpacity),
           spreadRadius: castshadowSpread,
           blurRadius: castshadowBlur,
-          offset: const Offset(0, 2),
+          offset: const Offset(0, 0),
         );
       });
       return;
@@ -108,6 +105,7 @@ class _FeedItemCardState extends State<FeedItemCard>
           // Choose the dominant color or fallback to a default color
           _dominantColor =
               paletteGenerator.vibrantColor?.color ?? Colors.blueGrey;
+              debugPrint(_dominantColor.toString());
         });
       }
     } catch (e) {
