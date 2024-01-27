@@ -70,9 +70,6 @@ flutter:
   uses-material-design: true
   
   fonts:
-    - family: Segoe UI Variable Small
-      fonts:
-        - asset: assets/fonts/seguivar.ttf
     - family: Lato
       fonts:
         - asset: assets/fonts/lato/Lato-Regular.ttf
