@@ -59,7 +59,7 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
                               };
                             case 'p':
                               return {
-                                'font-size': '16px',
+                                'font-size': '18px',
                                 'font-family': 'Lato',
                                 'line-height': '2',
                                 'font-weight': '400'
@@ -83,16 +83,16 @@ void showContentScreen(BuildContext context, String title, String thumbnail,
                                 'border-radius': '12px',
                                 'margin': '8 auto'
                               };
-                              case 'figcaption':
+                            case 'figcaption':
                               return {
-                                'font-size': '14px',
+                                'font-size': '16px',
                                 'font-family': 'Lato',
                                 'font-weight': '400',
                                 'text-align': 'center',
                                 'margin': '24 auto',
                                 'opacity': '0.65',
                               };
-                              case 'em':
+                            case 'em':
                               return {
                                 'font-size': '14px',
                                 'font-family': 'Lato',

@@ -44,11 +44,7 @@ dependencies:
   intl: ^0.18.1
   url_launcher: ^6.2.2
   html: ^0.15.4
-  fluent_ui:
-        git: https://github.com/bdlukaa/fluent_ui.git
   flutter_widget_from_html: ^0.14.11
-  flutter_widget_from_html_core: ^0.14.11
-  shimmer: ^3.0.0
 
 
 dev_dependencies:
@@ -74,9 +70,6 @@ flutter:
   uses-material-design: true
   
   fonts:
-    - family: Segoe UI Variable Small
-      fonts:
-        - asset: assets/fonts/seguivar.ttf
     - family: Lato
       fonts:
         - asset: assets/fonts/lato/Lato-Regular.ttf

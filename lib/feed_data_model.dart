@@ -2,6 +2,22 @@
 
 import 'package:flutter/material.dart';
 
+class ColorInfo {
+  final int r;
+  final int g;
+  final int b;
+
+  ColorInfo({required this.r, required this.g, required this.b});
+
+  factory ColorInfo.fromJson(Map<String, dynamic> json) {
+    return ColorInfo(
+      r: json['r'] as int? ?? 0,
+      g: json['g'] as int? ?? 0,
+      b: json['b'] as int? ?? 0,
+    );
+  }
+}
+
 class Feed {
   final String status;
   final String siteTitle;
@@ -67,11 +83,13 @@ class Item {
   final List<dynamic> media;
   final List<dynamic> enclosures;
   final PodcastInfo podcastInfo;
+  final ColorInfo thumbnailColor;
 
   Item({
     required this.id,
     required this.title,
     required this.thumbnail,
+    required this.thumbnailColor,
     required this.link,
     required this.author,
     required this.published,
@@ -104,31 +122,25 @@ class Item {
         id: json['id'] as String? ?? '', // Providing a default value if null
         title: json['title'] as String? ?? '',
         thumbnail: json['thumbnail'] as String? ?? '',
+        thumbnailColor: ColorInfo.fromJson(
+            json['thumbnailColor'] as Map<String, dynamic>? ?? {}),
+
         link: json['link'] as String? ?? '',
         author: json['author'] is List
             ? (json['author'] as List).join(', ')
             : json['author'] as String? ?? '',
         published: json['published'] as String? ?? '',
         created: json['created'] as String? ?? '',
-      category: json['category'] == null 
-          ? <String>[] 
-          : (json['category'] as List<dynamic>).map<String>((item) {
-              try {
-                if (item is String) {
-                  return item;
-                } else if (item is Map<String, dynamic> && item.containsKey('\$text')) {
-                  return item['\$text'] as String;
-                } else {
-                  return '';
-                }
-              } catch (e) {
-                return '';
-              }
-            }).toList(),
+        category: (json['categories'] as String? ?? '')
+            .split(',')
+            .map((s) => s.trim())
+            .toList(),
         content: json['content'] as String? ?? '',
         media: List<dynamic>.from(json['media'] ?? []),
         enclosures: List<dynamic>.from(json['enclosures'] ?? []),
-        podcastInfo: PodcastInfo.fromJson(json['podcastInfo'] ?? {}),
+        podcastInfo: json['podcastInfo'] != null
+            ? PodcastInfo.fromJson(json['podcastInfo'] as Map<String, dynamic>)
+            : PodcastInfo(author: '', image: '', categories: []),
       );
     } catch (e) {
       debugPrint('Error parsing item JSON: $json');
