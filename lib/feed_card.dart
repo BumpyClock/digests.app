@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'feed_data_model.dart';
-import 'package:palette_generator/palette_generator.dart';
 import 'package:intl/intl.dart';
 import 'package:html/parser.dart' as htmlparser;
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'reader_view.dart';
 
@@ -21,6 +19,8 @@ class FeedItemCard extends StatefulWidget {
   _FeedItemCardState createState() => _FeedItemCardState();
 }
 
+final RegExp imageRegExp = RegExp(r'<img.+?src="(.+?)".*?>');
+
 class _FeedItemCardState extends State<FeedItemCard>
     with AutomaticKeepAliveClientMixin {
   @override
@@ -29,15 +29,14 @@ class _FeedItemCardState extends State<FeedItemCard>
   String buttonText = 'Read more';
   bool _isHovering = false;
   Color? _dominantColor;
-  final double coreshadowOpacity = .08;
-  final double castshadowOpacity = .04;
+  final double coreshadowOpacity = .18;
+  final double castshadowOpacity = .14;
   final double coreshadowBlur = 0.25;
   final double castshadowBlur = 2;
   final double coreshadowSpread = 0.25;
   final double castshadowSpread = 2;
-  final RegExp imageRegExp = RegExp(r'<img.+?src="(.+?)".*?>');
-  BoxShadow boxShadowCore = BoxShadow();
-  BoxShadow boxShadowCast = BoxShadow();
+  late BoxShadow boxShadowCore = BoxShadow();
+  late BoxShadow boxShadowCast = BoxShadow();
   Uint8List transparentImage =
       base64Decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 
@@ -54,11 +53,15 @@ class _FeedItemCardState extends State<FeedItemCard>
   void initState() {
     super.initState();
     _updatePaletteGenerator();
+    boxShadowCore =
+        generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
+    boxShadowCast =
+        generateBoxShadow(castshadowOpacity, castshadowSpread, castshadowBlur);
   }
 
   Future<String> fetchContent(String url) async {
     final response = await http.post(
-      Uri.parse('https://rss.bumpyclock.com/getreaderview'),
+      Uri.parse('https://api.bumpyclock.com/getreaderview'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "urls": [url]
@@ -74,88 +77,51 @@ class _FeedItemCardState extends State<FeedItemCard>
   }
 
   bool isBase64(String str) {
-    try {
-      base64.decode(str);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return RegExp(
+            r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+        .hasMatch(str);
   }
 
   ImageProvider buildImage(String imageUrl) {
-    try {
-      if (imageUrl.startsWith('data:image')) {
-        final base64Image = imageUrl.split(',').last;
-        debugPrint('base64Image: $base64Image');
-        final decodedImage = base64Decode(base64Image);
-        debugPrint('decodedImage: $decodedImage');
-        return MemoryImage(decodedImage);
-      } else {
-        return CachedNetworkImageProvider(imageUrl);
-      }
-    } catch (e) {
-      debugPrint('Error building image: $e');
+    if (imageUrl.isEmpty) {
       return MemoryImage(transparentImage);
+    } else {
+      try {
+        if (imageUrl.startsWith('data:image')) {
+          return MemoryImage(transparentImage);
+        } else {
+          return CachedNetworkImageProvider(imageUrl);
+        }
+      } catch (e) {
+        return MemoryImage(transparentImage);
+      }
     }
   }
 
-  Future<void> _updatePaletteGenerator() async {
-    if (kIsWeb || widget.item.thumbnail.startsWith('data:image')) {
-      setState(() {
-        buttonText = 'Read more';
-        _dominantColor = Colors.grey.withOpacity(.12);
-        boxShadowCore = BoxShadow(
-          color: _dominantColor!.withOpacity(coreshadowOpacity),
-          spreadRadius: coreshadowSpread,
-          blurRadius: coreshadowBlur,
-          offset: const Offset(0, 0),
-        );
-        boxShadowCast = BoxShadow(
-          color: _dominantColor!.withOpacity(castshadowOpacity),
-          spreadRadius: castshadowSpread,
-          blurRadius: castshadowBlur,
-          offset: const Offset(0, 0),
-        );
-      });
-      return;
-    }
-    // If running in a web environment, skip palette generation
+  void _updatePaletteGenerator() {
+    // Extract the RGB values from the thumbnailColor
+    final r = widget.item.thumbnailColor.r;
+    final g = widget.item.thumbnailColor.g;
+    final b = widget.item.thumbnailColor.b;
 
-    try {
-      final PaletteGenerator paletteGenerator =
-          await PaletteGenerator.fromImageProvider(
-        CachedNetworkImageProvider(widget.item.thumbnail),
-        maximumColorCount: 5,
+    // Create a color from the RGB values
+    final color = Color.fromRGBO(r, g, b, 1);
+
+    setState(() {
+      _dominantColor = color;
+      boxShadowCore = BoxShadow(
+        color: _dominantColor!.withOpacity(coreshadowOpacity),
+        spreadRadius: coreshadowSpread,
+        blurRadius: coreshadowBlur,
+        offset: const Offset(0, 0),
       );
-      if (mounted) {
-        setState(() {
-          // Choose the dominant color or fallback to a default color
-          _dominantColor =
-              paletteGenerator.dominantColor?.color ?? Colors.blueGrey;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error generating palette: $e');
-      if (mounted) {
-        setState(() {
-          _dominantColor = Colors.black.withOpacity(.12);
-          boxShadowCore = BoxShadow(
-            color: _dominantColor?.withOpacity(coreshadowOpacity) ??
-                Colors.transparent,
-            spreadRadius: coreshadowSpread,
-            blurRadius: coreshadowBlur,
-            offset: const Offset(0, 0),
-          );
-          boxShadowCast = BoxShadow(
-            color: _dominantColor?.withOpacity(castshadowOpacity) ??
-                Colors.transparent,
-            spreadRadius: castshadowSpread,
-            blurRadius: castshadowBlur,
-            offset: const Offset(0, 0),
-          );
-        });
-      }
-    }
+      boxShadowCast = BoxShadow(
+        color: _dominantColor!.withOpacity(castshadowOpacity),
+        spreadRadius: castshadowSpread,
+        blurRadius: castshadowBlur,
+        offset: const Offset(0, 0),
+      );
+    });
   }
 
   String formatPublishedDate(String dateStr) {
@@ -169,14 +135,14 @@ class _FeedItemCardState extends State<FeedItemCard>
 
   @override
   Widget build(BuildContext context) {
-    BoxShadow coreshadowRest =
-        generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
+    // BoxShadow coreshadowRest =
+    //     generateBoxShadow(coreshadowOpacity, coreshadowSpread, coreshadowBlur);
     BoxShadow castshadowRest =
         generateBoxShadow(castshadowOpacity, castshadowSpread, castshadowBlur);
-    BoxShadow coreshadowHover = generateBoxShadow(
-        coreshadowOpacity + .04, coreshadowSpread, coreshadowBlur);
+    // BoxShadow coreshadowHover = generateBoxShadow(
+    //     coreshadowOpacity + .04, coreshadowSpread, coreshadowBlur);
     BoxShadow castshadowHover = generateBoxShadow(
-        castshadowOpacity + .05, castshadowSpread + 4, castshadowBlur + 4);
+        castshadowOpacity + .15, castshadowSpread + 4, castshadowBlur + 4);
 
     super.build(context);
     String imageUrl = widget.item.thumbnail;
@@ -214,20 +180,18 @@ class _FeedItemCardState extends State<FeedItemCard>
           child: RepaintBoundary(
             child: Card(
               clipBehavior: Clip.antiAlias,
-              // elevation: elevation,
+              elevation: elevation,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(23),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  FadeInImage.memoryNetwork(
-                    placeholder:
-                        transparentImage, // kTransparentImage is a 1x1 transparent pixel
-                    image: imageUrl,
+                  Image(
+                    image: buildImage(imageUrl),
                     fit: BoxFit.cover,
                     width: double.maxFinite,
-                    height: 200,
+                    height: 300,
                   ),
                   Stack(
                     children: [
@@ -278,7 +242,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                               ),
                             ),
                           ),
-                          (widget.item.author.isNotEmpty ?? false)
+                          (widget.item.author.isNotEmpty)
                               ? Padding(
                                   padding:
                                       const EdgeInsets.fromLTRB(12, 4, 12, 0),
@@ -350,7 +314,6 @@ class _FeedItemCardState extends State<FeedItemCard>
                                         widget.item.link);
                                   } catch (e) {
                                     // Handle error or show a message
-                                    debugPrint('Error fetching content: $e');
                                   }
                                 },
                               ),

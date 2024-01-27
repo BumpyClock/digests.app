@@ -52,7 +52,8 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
 
   void _onScroll() {
     if (!_isLoading &&
-        controller.position.pixels == controller.position.maxScrollExtent) {
+        controller.position.pixels >=
+            (.9 * controller.position.maxScrollExtent)) {
       _loadMoreItems();
     }
   }
@@ -86,7 +87,7 @@ class _RSSFeedScreenState extends State<RSSFeedScreen> {
       "https://www.vox.com/rss/index.xml",
     ];
 
-    var url = Uri.parse('https://rss.bumpyclock.com/parse');
+    var url = Uri.parse('https://api.bumpyclock.com/parse');
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
         body: json.encode({"urls": urls}));
