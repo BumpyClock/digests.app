@@ -187,11 +187,15 @@ class _FeedItemCardState extends State<FeedItemCard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Image(
-                    image: buildImage(imageUrl),
-                    fit: BoxFit.cover,
-                    width: double.maxFinite,
-                    height: 300,
+                  Container(
+                    constraints: BoxConstraints(
+                      maxHeight: 320, // Set your desired maximum height here
+                    ),
+                    child: Image(
+                      image: buildImage(imageUrl),
+                      fit: BoxFit.fitWidth,
+                      width: double.maxFinite,
+                    ),
                   ),
                   Stack(
                     children: [
@@ -212,7 +216,7 @@ class _FeedItemCardState extends State<FeedItemCard>
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image: buildImage(imageUrl),
-                                        opacity: .9,
+                                        opacity: .5,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
